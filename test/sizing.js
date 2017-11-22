@@ -33,11 +33,11 @@ describe('pool size of 1', () => {
 
   it('can only send 1 query at a time', co.wrap(function * () {
     const pool = new Pool({ max: 1 })
-    const queries = _.times(20, (i) => {
-      return pool.query('SELECT COUNT(*) as counts FROM pg_stat_activity')
-    })
+    const queryText = 'SELECT COUNT(*) as counts FROM pg_stat_activity WHERE query = $1'
+    const queries = _.times(20, () =>
+      pool.query(queryText, [queryText]))
     const results = yield Promise.all(queries)
-    const counts = results.map(res => parseInt(res.rows[0].counts), 10)
+    const counts = results.map(res => parseInt(res.rows[0].counts, 10))
     expect(counts).to.eql(_.times(20, i => 1))
     return yield pool.end()
   }))
